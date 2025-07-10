@@ -1,6 +1,5 @@
 # data.py
 from data.db import run_query
-# Initial movie list (in-memory storage)
 
 def get_movies():
     query = "SELECT id, title, description FROM movies ORDER BY id;"

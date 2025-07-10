@@ -36,10 +36,6 @@ class LoginPage:
             email = st.sidebar.text_input("Email").strip()
             password = st.sidebar.text_input("Password", type="password")
 
-            st.sidebar.subheader("Login")
-            email = st.sidebar.text_input("Email").strip()
-            password = st.sidebar.text_input("Password", type="password")
-
             if st.sidebar.button("Login"):
                 if login(email, password):
                     st.rerun()

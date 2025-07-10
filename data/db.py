@@ -6,7 +6,7 @@ def get_connection():
     return psycopg2.connect(
         dbname="movie_ticket_db",
         user="postgres",
-        password="#5559827898#SS",  # 🔁 use your real password
+        password="#5559827898#SS",
         host="localhost",
         port="5432"
     )

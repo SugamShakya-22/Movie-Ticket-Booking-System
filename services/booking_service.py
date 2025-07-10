@@ -1,4 +1,3 @@
-from models.booking import Booking
 from data.db import run_query
 
 class BookingService:

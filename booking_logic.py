@@ -1,8 +1,7 @@
 # booking_logic.py
-from services.booking_service import BookingService
 from data.showtime import get_showtime_id
+from services.booking_service import BookingService
 from services.showtime_service import ShowtimeService
-from data.movies import get_movies
 
 
 def confirm_booking(user_id, movie_id, showtime, seat_list):

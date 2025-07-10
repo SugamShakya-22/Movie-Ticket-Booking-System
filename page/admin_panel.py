@@ -32,8 +32,8 @@ class AdminPanel:
             description = st.text_area("Description")
             showtimes_str = st.text_input("Showtimes (comma separated)")
 
-            poster_url = st.text_input("Poster Image URL (optional)")
-            trailer_url = st.text_input("Trailer URL (YouTube iframe or direct link)")
+            poster_url = st.text_input("Poster Image URL")
+            trailer_url = st.text_input("Trailer URL")
             price_per_seat = st.number_input("Price per Seat", min_value=0.0, value=200.0, step=10.0)
 
             if st.button("Add Movie"):

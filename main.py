@@ -8,7 +8,7 @@ from page.admin_panel import AdminPanel
 from auth import get_user, register_user, verify_password
 
 st.set_page_config(page_title="Movie Ticket Booking", layout="centered")
-st.title("🎬 Movie Ticket Booking System")
+st.title("Movie Ticket Booking System")
 
 # Initialize session state for user
 if "user" not in st.session_state:

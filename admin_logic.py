@@ -5,9 +5,8 @@ from services.showtime_service import ShowtimeService
 # admin_logic.py
 
 def add_new_movie(title, description, showtimes, poster_url=None, trailer_url=None):
-    from services.movie_service import MovieService, ShowtimeService
 
-    movie_id = MovieService.add_movie(title, description, poster_url, trailer_url)
+    movie_id = MovieService.add_movie(title, description, showtimes, poster_url, trailer_url)
     for time in showtimes:
         ShowtimeService.add_showtime(movie_id, time)
     return movie_id
