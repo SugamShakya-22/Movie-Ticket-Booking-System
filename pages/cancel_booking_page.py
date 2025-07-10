@@ -1,30 +1,39 @@
-# pages/cancel_booking_page.py
-
 import streamlit as st
-from booking_logic import get_user_bookings, cancel_user_booking
-
+from services.booking_service import BookingService
 
 class CancelBookingPage:
     def render(self):
-        st.subheader("❌ Cancel Your Booking")
+        st.subheader("❌ Cancel Booking")
 
-        name = st.text_input("Enter your name to find your bookings")
+        # Check if user is logged in
+        if not st.session_state.get("user"):
+            st.warning("Please login to view and cancel your bookings.")
+            return
 
-        if name:
-            bookings = get_user_bookings(name)
+        user = st.session_state.user
+        user_id = user["id"]
+        user_name = user["name"]
 
-            if not bookings:
-                st.warning("No bookings found.")
-            else:
-                booking_options = [
-                    f"ID {b['booking_id']}: {b['movie_title']} at {b['showtime']} (Seats: {', '.join(b.get('seats', []))})"
-                    for b in bookings
-                ]
+        st.write(f"Showing bookings for: **{user_name}**")
 
-                selected_booking = st.selectbox("Select a booking to cancel", booking_options)
+        # Fetch bookings for logged-in user
+        bookings = BookingService.get_user_bookings(user_id)
+        if not bookings:
+            st.info("You have no bookings to cancel.")
+            return
 
-                if st.button("Cancel Selected Booking"):
-                    booking_id = int(selected_booking.split()[1].strip(":"))
-                    cancel_user_booking(booking_id)
-                    st.success(f"Booking ID {booking_id} has been canceled.")
-                    st.experimental_rerun()
+        # Display bookings with cancel button
+        for booking in bookings:
+            booking_id = booking["booking_id"]
+            movie_title = booking["movie_title"]
+            showtime = booking["showtime"]
+            seats = ", ".join(booking["seats"])
+
+            st.markdown(f"**Booking ID:** {booking_id}")
+            st.markdown(f"**Movie:** {movie_title}")
+            st.markdown(f"**Showtime:** {showtime}")
+            st.markdown(f"**Seats:** {seats}")
+
+            if st.button(f"Cancel Booking {booking_id}", key=f"cancel_{booking_id}"):
+                BookingService.cancel_booking(booking_id)
+                st.success(f"Booking {booking_id} cancelled successfully!")

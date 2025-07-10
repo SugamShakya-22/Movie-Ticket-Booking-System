@@ -1,9 +1,16 @@
 # pages/admin_panel.py
 
 import streamlit as st
-from admin_logic import add_movie, remove_movie
-from data.data import get_movies, get_showtime_for_movie, remove_showtime, add_showtime, update_showtime
-from booking_logic import get_all_bookings, get_user_bookings, get_booking_details, get_booked_seats, get_available_seats
+from admin_logic import (
+    add_new_movie, remove_movie_by_id,
+    add_movie_showtime, remove_movie_showtime,
+    update_movie_showtime, list_movies, list_showtime
+)
+from booking_logic import (
+    get_booking_details, get_booked_seats, get_available_seats
+)
+from services.booking_service import BookingService
+from services.showtime_service import ShowtimeService
 
 
 class AdminPanel:
@@ -11,11 +18,12 @@ class AdminPanel:
         st.subheader("👤 Admin Panel")
 
         admin_action = st.selectbox("Action", [
-            "Add Movie", "Remove Movie", "Update Showtimes", "View Movies", "View Bookings",
-            "View Seats Status", "View Showtimes", "View Booking Details", "View Booking History"
+            "Add Movie", "Remove Movie", "Update Showtimes",
+            "View Movies", "View Bookings", "View Seats Status",
+            "View Showtimes", "View Booking Details", "View Booking History"
         ])
 
-        movies = get_movies()
+        movies = list_movies()
 
         if admin_action == "Add Movie":
             title = st.text_input("Movie Title")
@@ -27,30 +35,30 @@ class AdminPanel:
                     st.warning("Please fill all fields.")
                 else:
                     showtimes = [s.strip() for s in showtimes_str.split(",")]
-                    movie_id = add_movie(title, description, showtimes)
+                    movie_id = add_new_movie(title, description, showtimes)
                     st.success(f"Movie '{title}' added with ID {movie_id}.")
 
         elif admin_action == "Remove Movie":
             if not movies:
                 st.info("No movies to remove.")
             else:
-                movie_options = [f"ID {m['id']}: {m['title']}" for m in movies]
+                movie_options = [f"ID {m.movie_id}: {m.title}" for m in movies]
                 selected = st.selectbox("Select a movie to remove", movie_options)
                 movie_id = int(selected.split()[1].strip(":"))
 
                 if st.button("Remove Movie"):
-                    remove_movie(movie_id)
+                    remove_movie_by_id(movie_id)
                     st.success(f"Movie ID {movie_id} has been removed.")
-                    st.experimental_rerun()
+                    st.button("Refresh", st.rerun)
 
         elif admin_action == "Update Showtimes":
             if not movies:
                 st.info("No movies available.")
             else:
-                movie_options = [f"ID {m['id']}: {m['title']}" for m in movies]
+                movie_options = [f"ID {m.movie_id}: {m.title}" for m in movies]
                 selected = st.selectbox("Select a movie", movie_options)
                 movie_id = int(selected.split()[1].strip(":"))
-                showtimes = get_showtime_for_movie(movie_id)
+                showtimes = list_showtime(movie_id)
 
                 st.markdown("#### Existing Showtimes")
                 if not showtimes:
@@ -58,9 +66,9 @@ class AdminPanel:
                 else:
                     selected_showtime = st.selectbox("Select showtime to remove", showtimes)
                     if st.button("Remove Showtime"):
-                        remove_showtime(movie_id, selected_showtime)
+                        remove_movie_showtime(movie_id, selected_showtime)
                         st.success(f"Removed showtime: {selected_showtime}")
-                        st.experimental_rerun()
+                        st.button("Refresh", st.rerun)
 
                 st.markdown("#### Add New Showtime")
                 new_showtime = st.text_input("Enter new showtime (e.g., 3:00 PM)")
@@ -68,9 +76,9 @@ class AdminPanel:
                     if new_showtime.strip() == "":
                         st.warning("Please enter a showtime.")
                     else:
-                        add_showtime(movie_id, new_showtime.strip())
+                        add_movie_showtime(movie_id, new_showtime.strip())
                         st.success(f"Added new showtime: {new_showtime}")
-                        st.experimental_rerun()
+                        st.button("Refresh", st.rerun)
 
                 st.markdown("#### Edit Existing Showtime")
                 if showtimes:
@@ -80,9 +88,9 @@ class AdminPanel:
                         if new_time.strip() == "":
                             st.warning("Please enter a new showtime.")
                         else:
-                            update_showtime(movie_id, selected_time_to_edit, new_time.strip())
+                            update_movie_showtime(movie_id, selected_time_to_edit, new_time.strip())
                             st.success(f"Updated showtime from '{selected_time_to_edit}' to '{new_time.strip()}'")
-                            st.experimental_rerun()
+                            st.button("Refresh", st.rerun)
 
         elif admin_action == "View Movies":
             st.subheader("🎬 All Movies")
@@ -90,35 +98,41 @@ class AdminPanel:
                 st.info("No movies found.")
             else:
                 for movie in movies:
-                    st.markdown(f"**{movie['title']}** (ID: {movie['id']})")
-                    st.caption(movie['description'])
-                    showtimes = get_showtime_for_movie(movie["id"])
-                    st.write("Showtimes:", ", ".join(showtimes) if showtimes else "No showtimes available.")
+                    st.markdown(f"**{movie.title}** (ID: {movie.movie_id})")
+                    st.caption(movie.description)
+                    showtimes = list_showtime(movie.movie_id)
+                    st.write("Showtimes:", ", ".join([s.time for s in showtimes]) if showtimes else "No showtimes available.")
+
                     st.markdown("---")
 
         elif admin_action == "View Bookings":
             st.subheader("📋 All Bookings")
-            bookings = get_all_bookings()
-            if not bookings:
-                st.info("No bookings found.")
+            bookings = BookingService.get_all_bookings()
+            if bookings:
+                for booking in bookings:
+                    st.markdown(f"**Booking ID:** {booking['booking_id']}")
+                    st.write(f"User: {booking['user_name']}")
+                    st.write(f"Movie: {booking['movie_title']}")
+                    st.write(f"Showtime: {booking['showtime']}")
+                    st.write(f"Seats: {', '.join(booking['seats'])}")
+                    st.markdown("---")
             else:
-                for b in bookings:
-                    st.write(f"Booking ID: {b['booking_id']}, Name: {b['name']}, Movie: {b['movie_title']}, Showtime: {b['showtime']}, Seats: {', '.join(b['seats'])}")
+                st.info("No bookings available.")
 
         elif admin_action == "View Seats Status":
             st.subheader("🪑 View Seats Status")
             if not movies:
                 st.info("No movies available.")
             else:
-                selected_movie = st.selectbox("Select Movie", [f"{m['title']} (ID: {m['id']})" for m in movies])
+                selected_movie = st.selectbox("Select Movie", [f"{m.title} (ID: {m.movie_id})" for m in movies])
                 movie_id = int(selected_movie.split("ID: ")[1].rstrip(")"))
-                showtimes = get_showtime_for_movie(movie_id)
+                showtimes = list_showtime(movie_id)
                 if not showtimes:
                     st.info("No showtimes for this movie.")
                 else:
                     selected_showtime = st.selectbox("Select Showtime", showtimes)
-                    booked_seats = get_booked_seats(movie_id, selected_showtime)
-                    available_seats = get_available_seats(movie_id, selected_showtime)
+                    booked_seats = get_booked_seats(movie_id, selected_showtime.time)
+                    available_seats = get_available_seats(movie_id, selected_showtime.time)
                     st.write("Booked Seats:", ", ".join(booked_seats) if booked_seats else "No seats booked.")
                     st.write("Available Seats:", ", ".join(available_seats) if available_seats else "No seats available.")
 
@@ -128,8 +142,10 @@ class AdminPanel:
                 st.info("No movies available.")
             else:
                 for movie in movies:
-                    showtimes = get_showtime_for_movie(movie["id"])
-                    st.markdown(f"**{movie['title']}**: {', '.join(showtimes) if showtimes else 'No showtimes'}")
+                    showtimes = ShowtimeService.get_showtimes_by_movie(movie.movie_id)
+                    showtime_strs = [s.time for s in showtimes]
+                    st.markdown(f"**{movie.title}**: {', '.join(showtime_strs) if showtime_strs else 'No showtimes'}")
+
 
         elif admin_action == "View Booking Details":
             st.subheader("🔎 Booking Details")
@@ -142,12 +158,22 @@ class AdminPanel:
                     st.write(details)
 
         elif admin_action == "View Booking History":
-            st.subheader("📜 Booking History by Name")
-            name = st.text_input("Enter Name")
-            if name:
-                bookings = get_user_bookings(name)
-                if not bookings:
-                    st.info("No bookings found for this name.")
-                else:
-                    for b in bookings:
-                        st.write(f"Booking ID: {b['booking_id']}, Movie: {b['movie_title']}, Showtime: {b['showtime']}, Seats: {', '.join(b.get('seats', []))}")
+            st.subheader("📜 Booking History by User ID")
+            user_id = st.text_input("Enter User ID to view bookings")
+
+            if user_id:
+                try:
+                    user_id_int = int(user_id)
+                    bookings = BookingService.get_user_bookings(user_id_int)
+                    if bookings:
+                        for booking in bookings:
+                            st.write(f"Booking ID: {booking['booking_id']}")
+                            st.write(f"User: {booking['user_name']}")
+                            st.write(f"Movie: {booking['movie_title']}")
+                            st.write(f"Showtime: {booking['showtime']}")
+                            st.write(f"Seats: {', '.join(booking['seats'])}")
+                            st.write("---")
+                    else:
+                        st.info("No bookings found for this user.")
+                except ValueError:
+                    st.error("Please enter a valid numeric user ID.")

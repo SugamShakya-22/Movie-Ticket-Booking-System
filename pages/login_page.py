@@ -1,8 +1,5 @@
-# pages/login_page.py
-
 import streamlit as st
-from auth import get_user_by_email, verify_password, create_user
-
+from auth import get_user, verify_password, register_user
 
 class LoginPage:
     def __init__(self):
@@ -13,35 +10,43 @@ class LoginPage:
 
         if auth_action == "Register":
             st.sidebar.subheader("Create Account")
-            name = st.sidebar.text_input("Name")
-            email = st.sidebar.text_input("Email")
+            name = st.sidebar.text_input("Name").strip()
+            email = st.sidebar.text_input("Email").strip()
             password = st.sidebar.text_input("Password", type="password")
             retype = st.sidebar.text_input("Retype Password", type="password")
 
             if st.sidebar.button("Register"):
-                if name and email and password == retype:
-                    existing_user = get_user_by_email(email)
+                if not (name and email and password and retype):
+                    st.sidebar.warning("Please fill all fields.")
+                elif password != retype:
+                    st.sidebar.error("Passwords do not match.")
+                else:
+                    existing_user = get_user(email)
                     if existing_user:
                         st.sidebar.error("User already exists.")
                     else:
                         is_admin = email.lower() == "admin@hotmail.com"
-                        create_user(name, email, password, is_admin)
+                        register_user(name, email, password, is_admin)
                         st.sidebar.success("Registered successfully. Please log in.")
-                else:
-                    st.sidebar.warning("Please fill all fields.")
+                        # Optional: clear input fields here by rerunning or managing state
 
-        else:
+        else:  # Login
             st.sidebar.subheader("Login")
-            email = st.sidebar.text_input("Email")
+            email = st.sidebar.text_input("Email").strip()
             password = st.sidebar.text_input("Password", type="password")
 
             if st.sidebar.button("Login"):
-                user = get_user_by_email(email)
+                user = get_user(email)
                 if not user:
                     st.sidebar.error("User not found.")
-                elif not verify_password(password, user["password"]):
+                elif not verify_password(password, user.password):
                     st.sidebar.error("Invalid credentials.")
                 else:
                     self.user = user
-                    st.session_state.user = user
+                    st.session_state.user = {
+                        "id": user.user_id,
+                        "name": user.name,
+                        "email": user.email,
+                        "is_admin": user.is_admin
+                    }
                     st.experimental_rerun()

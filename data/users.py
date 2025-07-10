@@ -1,4 +1,4 @@
-from db import run_query
+from data.db import run_query
 
 def create_user(name, email, hashed_password, is_admin=False):
     query = """

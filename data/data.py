@@ -1,5 +1,5 @@
 # data.py
-from db import run_query
+from data.db import run_query
 # Initial movie list (in-memory storage)
 
 def get_movies():

@@ -1,4 +1,4 @@
-from db import run_query
+from data.db import run_query
 
 def add_showtime(movie_id, time):
     query = "INSERT INTO showtime (movie_id, time) VALUES (%s, %s);"

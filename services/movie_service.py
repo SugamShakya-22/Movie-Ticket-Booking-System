@@ -1,5 +1,5 @@
 from models.movie import Movie
-from data import run_query
+from data.db import run_query
 
 class MovieService:
     @staticmethod

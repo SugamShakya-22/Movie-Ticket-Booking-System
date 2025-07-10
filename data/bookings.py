@@ -1,4 +1,4 @@
-from db import run_query
+from data.db import run_query
 
 def add_booking(user_id, name, showtime_id, seat_labels):
     query = """

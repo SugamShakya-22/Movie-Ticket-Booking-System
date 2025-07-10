@@ -1,24 +1,25 @@
 # pages/browse_movies_page.py
 
 import streamlit as st
-from data.data import get_movies, get_showtime_for_movie
+from services.movie_service import MovieService
+from services.showtime_service import ShowtimeService
 
 class BrowseMoviesPage:
     def render(self):
         st.subheader("🎬 Now Showing")
 
-        movies = get_movies()
+        movies = MovieService.get_all_movies()
 
         if not movies:
             st.info("No movies available.")
         else:
             for movie in movies:
-                st.markdown(f"### {movie['title']}")
-                st.caption(movie['description'])
+                st.markdown(f"### {movie.title}")                   # ✅ Access via attribute
+                st.caption(movie.description)                      # ✅ Access via attribute
 
-                showtimes = get_showtime_for_movie(movie["id"])
+                showtimes = ShowtimeService.get_showtimes_by_movie(movie.movie_id)
                 if showtimes:
-                    st.markdown("**Showtimes:** " + ", ".join(showtimes))
+                    st.markdown("**Showtimes:** " + ", ".join(s.time for s in showtimes))
                 else:
                     st.markdown("*No showtimes available.*")
 

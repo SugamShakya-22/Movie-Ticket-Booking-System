@@ -1,4 +1,4 @@
-from db import run_query
+from data.db import run_query
 
 def get_movies():
     query = "SELECT id, title, description FROM movies ORDER BY id;"
