@@ -1,11 +1,19 @@
+from data.db import run_query
 from services.movie_service import MovieService
 from services.showtime_service import ShowtimeService
 
-def add_new_movie(title, description, showtimes):
-    movie_id = MovieService.add_movie(title, description)
+# admin_logic.py
+
+def add_new_movie(title, description, showtimes, poster_url=None):
+    query = "INSERT INTO movies (title, description, poster_url) VALUES (%s, %s, %s) RETURNING id;"
+    result = run_query(query, (title, description, poster_url), fetch=True)
+    movie_id = result[0]["id"]
+
     for time in showtimes:
         ShowtimeService.add_showtime(movie_id, time)
+
     return movie_id
+
 
 def remove_movie_by_id(movie_id):
     MovieService.delete_movie(movie_id)

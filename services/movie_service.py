@@ -4,9 +4,9 @@ from data.db import run_query
 class MovieService:
     @staticmethod
     def get_all_movies():
-        query = "SELECT * FROM movies ORDER BY id;"
-        result = run_query(query, fetch=True)
-        return [Movie(row["id"], row["title"], row["description"]) for row in result]
+        query = "SELECT id, title, description, poster_url FROM movies ORDER BY id DESC;"
+        results = run_query(query, fetch=True)
+        return [Movie(row["id"], row["title"], row["description"], row["poster_url"]) for row in results]
 
     @staticmethod
     def get_movie_by_id(movie_id):
@@ -27,3 +27,9 @@ class MovieService:
     def delete_movie(movie_id):
         query = "DELETE FROM movies WHERE id = %s;"
         run_query(query, (movie_id,))
+
+    @staticmethod
+    def update_poster_url(movie_id, poster_url):
+        query = "UPDATE movies SET poster_url = %s WHERE id = %s;"
+        run_query(query, (poster_url, movie_id))
+

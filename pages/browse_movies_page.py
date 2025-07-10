@@ -1,5 +1,3 @@
-# pages/browse_movies_page.py
-
 import streamlit as st
 from services.movie_service import MovieService
 from services.showtime_service import ShowtimeService
@@ -14,8 +12,12 @@ class BrowseMoviesPage:
             st.info("No movies available.")
         else:
             for movie in movies:
-                st.markdown(f"### {movie.title}")                   # ✅ Access via attribute
-                st.caption(movie.description)                      # ✅ Access via attribute
+                st.markdown(f"### {movie.title}")                   # ✅ Movie Title
+                st.caption(movie.description)                      # ✅ Movie Description
+
+                # ✅ Display Poster if Available
+                if movie.poster_url:
+                    st.image(movie.poster_url, width=250, caption=movie.title)
 
                 showtimes = ShowtimeService.get_showtimes_by_movie(movie.movie_id)
                 if showtimes:

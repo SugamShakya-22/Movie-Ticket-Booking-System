@@ -10,6 +10,7 @@ from booking_logic import (
     get_booking_details, get_booked_seats, get_available_seats
 )
 from services.booking_service import BookingService
+from services.movie_service import MovieService
 from services.showtime_service import ShowtimeService
 
 
@@ -18,7 +19,7 @@ class AdminPanel:
         st.subheader("👤 Admin Panel")
 
         admin_action = st.selectbox("Action", [
-            "Add Movie", "Remove Movie", "Update Showtimes",
+            "Add Movie", "Update Movie Poster", "Remove Movie", "Update Showtimes",
             "View Movies", "View Bookings", "View Seats Status",
             "View Showtimes", "View Booking Details", "View Booking History"
         ])
@@ -30,13 +31,31 @@ class AdminPanel:
             description = st.text_area("Description")
             showtimes_str = st.text_input("Showtimes (comma separated)")
 
+            poster_url = st.text_input("Poster Image URL (optional)")
             if st.button("Add Movie"):
-                if title.strip() == "" or showtimes_str.strip() == "":
-                    st.warning("Please fill all fields.")
+                if not title or not description:
+                    st.warning("Title and description are required.")
                 else:
                     showtimes = [s.strip() for s in showtimes_str.split(",")]
-                    movie_id = add_new_movie(title, description, showtimes)
-                    st.success(f"Movie '{title}' added with ID {movie_id}.")
+                    movie_id = add_new_movie(title, description, showtimes, poster_url.strip() or None)
+                    st.success(f"Movie '{title}' added successfully!")
+
+        elif admin_action == "Update Movie Poster":
+            movies = MovieService.get_all_movies()
+            if not movies:
+                st.warning("No movies found.")
+                return
+
+            movie = st.selectbox("🎞️ Select Movie to Update Poster", movies, format_func=lambda m: m.title)
+            new_url = st.text_input("🖼️ New Poster URL")
+
+            if st.button("Update Poster"):
+                if new_url.strip():
+                    MovieService.update_poster_url(movie.movie_id, new_url.strip())
+                    st.success(f"Poster for '{movie.title}' updated successfully!")
+                else:
+                    st.warning("Please enter a valid image URL.")
+
 
         elif admin_action == "Remove Movie":
             if not movies:
