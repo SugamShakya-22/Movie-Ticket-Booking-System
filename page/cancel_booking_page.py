@@ -11,7 +11,8 @@ class CancelBookingPage:
             return
 
         user = st.session_state.user
-        user_id = user["id"]
+        user_id = st.session_state.user["id"]
+
         user_name = user["name"]
 
         st.write(f"Showing bookings for: **{user_name}**")
@@ -33,6 +34,7 @@ class CancelBookingPage:
             st.markdown(f"**Movie:** {movie_title}")
             st.markdown(f"**Showtime:** {showtime}")
             st.markdown(f"**Seats:** {seats}")
+
 
             if st.button(f"Cancel Booking {booking_id}", key=f"cancel_{booking_id}"):
                 BookingService.cancel_booking(booking_id)

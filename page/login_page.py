@@ -1,5 +1,6 @@
 import streamlit as st
-from auth import get_user, verify_password, register_user
+from auth import get_user, verify_password, register_user, login
+
 
 class LoginPage:
     def __init__(self):
@@ -35,18 +36,12 @@ class LoginPage:
             email = st.sidebar.text_input("Email").strip()
             password = st.sidebar.text_input("Password", type="password")
 
+            st.sidebar.subheader("Login")
+            email = st.sidebar.text_input("Email").strip()
+            password = st.sidebar.text_input("Password", type="password")
+
             if st.sidebar.button("Login"):
-                user = get_user(email)
-                if not user:
-                    st.sidebar.error("User not found.")
-                elif not verify_password(password, user.password):
-                    st.sidebar.error("Invalid credentials.")
+                if login(email, password):
+                    st.rerun()
                 else:
-                    self.user = user
-                    st.session_state.user = {
-                        "id": user.user_id,
-                        "name": user.name,
-                        "email": user.email,
-                        "is_admin": user.is_admin
-                    }
-                    st.experimental_rerun()
+                    st.sidebar.error("Invalid email or password.")

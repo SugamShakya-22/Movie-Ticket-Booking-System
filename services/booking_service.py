@@ -66,11 +66,15 @@ class BookingService:
     @staticmethod
     def get_all_bookings():
         query = """
-            SELECT b.id AS booking_id, u.name AS user_name, m.title AS movie_title, s.time AS showtime
+            SELECT b.id AS booking_id, u.name AS user_name, m.title AS movie_title,
+                   s.time AS showtime, COUNT(bs.seat_label) AS seat_count,
+                   m.price_per_seat * COUNT(bs.seat_label) AS total_price
             FROM bookings b
             JOIN users u ON b.user_id = u.id
             JOIN showtimes s ON b.showtime_id = s.id
             JOIN movies m ON s.movie_id = m.id
+            JOIN booking_seats bs ON b.id = bs.booking_id
+            GROUP BY b.id, u.name, m.title, s.time, m.price_per_seat
             ORDER BY b.id DESC;
         """
         results = run_query(query, fetch=True)
@@ -86,8 +90,10 @@ class BookingService:
                 "user_name": row["user_name"],
                 "movie_title": row["movie_title"],
                 "showtime": row["showtime"],
-                "seats": seat_list
+                "seats": seat_list,
+                "total_price": row["total_price"]
             })
+
         return all_bookings
 
     @staticmethod

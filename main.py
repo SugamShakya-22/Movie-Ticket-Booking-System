@@ -1,10 +1,10 @@
 # main.py
 import streamlit as st
 
-from pages.browse_movies_page import BrowseMoviesPage
-from pages.booking_page import BookingPage
-from pages.cancel_booking_page import CancelBookingPage
-from pages.admin_panel import AdminPanel
+from page.browse_movies_page import BrowseMoviesPage
+from page.booking_page import BookingPage
+from page.cancel_booking_page import CancelBookingPage
+from page.admin_panel import AdminPanel
 from auth import get_user, register_user, verify_password
 
 st.set_page_config(page_title="Movie Ticket Booking", layout="centered")

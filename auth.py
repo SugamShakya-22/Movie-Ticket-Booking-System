@@ -1,5 +1,6 @@
 from services.user_service import UserService
 from passlib.context import CryptContext
+import streamlit as st
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -15,3 +16,14 @@ def register_user(name, email, password, is_admin=False):
 
 def get_user(email):
     return UserService.get_user_by_email(email)
+
+
+def login(email, password):
+    user = get_user(email)
+    if user and verify_password(password, user["password"]):
+        st.session_state["user_id"] = user["id"]
+        st.session_state["name"] = user["name"]
+        st.session_state["role"] = "admin" if user["is_admin"] else "user"
+        return True
+    return False
+

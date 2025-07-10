@@ -1,8 +1,9 @@
-# pages/admin_panel.py
+# page/admin_panel.py
 
 import streamlit as st
+
 from admin_logic import (
-    add_new_movie, remove_movie_by_id,
+    remove_movie_by_id,
     add_movie_showtime, remove_movie_showtime,
     update_movie_showtime, list_movies, list_showtime
 )
@@ -19,7 +20,7 @@ class AdminPanel:
         st.subheader("👤 Admin Panel")
 
         admin_action = st.selectbox("Action", [
-            "Add Movie", "Update Movie Poster", "Remove Movie", "Update Showtimes",
+            "Add Movie", "Update Ticket Price", "Update Movie Trailer", "Update Movie Poster", "Remove Movie", "Update Showtimes",
             "View Movies", "View Bookings", "View Seats Status",
             "View Showtimes", "View Booking Details", "View Booking History"
         ])
@@ -32,13 +33,56 @@ class AdminPanel:
             showtimes_str = st.text_input("Showtimes (comma separated)")
 
             poster_url = st.text_input("Poster Image URL (optional)")
+            trailer_url = st.text_input("Trailer URL (YouTube iframe or direct link)")
+            price_per_seat = st.number_input("Price per Seat", min_value=0.0, value=200.0, step=10.0)
+
             if st.button("Add Movie"):
                 if not title or not description:
                     st.warning("Title and description are required.")
                 else:
                     showtimes = [s.strip() for s in showtimes_str.split(",")]
-                    movie_id = add_new_movie(title, description, showtimes, poster_url.strip() or None)
-                    st.success(f"Movie '{title}' added successfully!")
+                    movie_id = MovieService.add_movie(
+                        title=title,
+                        description=description,
+                        showtimes=showtimes,
+                        poster_url=poster_url.strip() or None,
+                        trailer_url=trailer_url.strip() or None,
+                        price_per_seat=price_per_seat
+                    )
+                    st.success(f"✅ Movie '{title}' added successfully!")
+
+        elif admin_action == "Update Ticket Price":
+            movies = MovieService.get_all_movies()
+            if movies:
+                selected_movie = st.selectbox("Select Movie", movies, format_func=lambda m: m.title)
+                new_price = st.number_input("New Price per Seat", min_value=0.0,
+                                            value=selected_movie.price_per_seat or 0.0, step=10.0)
+                if st.button("Update Price"):
+                    MovieService.update_price(selected_movie.movie_id, new_price)
+                    st.success("✅ Price updated successfully.")
+            else:
+                st.info("No movies available.")
+
+        elif admin_action == "Update Movie Trailer":
+            movies = MovieService.get_all_movies()
+            if not movies:
+                st.info("No movies available.")
+                return
+
+            selected_movie = st.selectbox(
+                "Select Movie to Update Trailer",
+                movies,
+                format_func=lambda m: m.title
+            )
+
+            new_trailer_url = st.text_input("New Trailer URL")
+
+            if st.button("Update Trailer"):
+                if new_trailer_url.strip():
+                    MovieService.update_trailer_url(selected_movie.movie_id, new_trailer_url.strip())
+                    st.success(f"Trailer for '{selected_movie.title}' updated successfully!")
+                else:
+                    st.warning("Please enter a valid trailer URL.")
 
         elif admin_action == "Update Movie Poster":
             movies = MovieService.get_all_movies()
@@ -129,11 +173,14 @@ class AdminPanel:
             bookings = BookingService.get_all_bookings()
             if bookings:
                 for booking in bookings:
-                    st.markdown(f"**Booking ID:** {booking['booking_id']}")
-                    st.write(f"User: {booking['user_name']}")
-                    st.write(f"Movie: {booking['movie_title']}")
-                    st.write(f"Showtime: {booking['showtime']}")
-                    st.write(f"Seats: {', '.join(booking['seats'])}")
+                    st.markdown(f"""
+                            **Booking ID:** {booking['booking_id']}  
+                            **User:** {booking['user_name']}  
+                            **Movie:** {booking['movie_title']}  
+                            **Showtime:** {booking['showtime']}  
+                            **Seats:** {', '.join(booking['seats'])}  
+                            **💰 Total Price:** Rs. {booking['total_price']}  
+                        """)
                     st.markdown("---")
             else:
                 st.info("No bookings available.")
