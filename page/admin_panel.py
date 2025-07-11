@@ -2,6 +2,7 @@
 
 import streamlit as st
 
+import admin_logic
 from admin_logic import (
     remove_movie_by_id,
     add_movie_showtime, remove_movie_showtime,
@@ -22,7 +23,7 @@ class AdminPanel:
         admin_action = st.selectbox("Action", [
             "Add Movie", "Update Ticket Price", "Update Movie Trailer", "Update Movie Poster", "Remove Movie", "Update Showtimes",
             "View Movies", "View Bookings", "View Seats Status",
-            "View Showtimes", "View Booking Details", "View Booking History"
+            "View Showtimes", "View Booking Details", "View Booking History", "View Cancelled Bookings"
         ])
 
         movies = list_movies()
@@ -41,7 +42,7 @@ class AdminPanel:
                     st.warning("Title and description are required.")
                 else:
                     showtimes = [s.strip() for s in showtimes_str.split(",")]
-                    movie_id = MovieService.add_movie(
+                    movie_id = admin_logic.add_new_movie(
                         title=title,
                         description=description,
                         showtimes=showtimes,
@@ -55,8 +56,15 @@ class AdminPanel:
             movies = MovieService.get_all_movies()
             if movies:
                 selected_movie = st.selectbox("Select Movie", movies, format_func=lambda m: m.title)
-                new_price = st.number_input("New Price per Seat", min_value=0.0,
-                                            value=selected_movie.price_per_seat or 0.0, step=10.0)
+                # Ensure value is float before using in number_input
+                price_value = float(selected_movie.price_per_seat) if selected_movie.price_per_seat else 0.0
+
+                new_price = st.number_input(
+                    "New Price per Seat",
+                    min_value=0.0,
+                    value=price_value,
+                    step=10.0
+                )
                 if st.button("Update Price"):
                     MovieService.update_price(selected_movie.movie_id, new_price)
                     st.success("✅ Price updated successfully.")
@@ -243,3 +251,23 @@ class AdminPanel:
                         st.info("No bookings found for this user.")
                 except ValueError:
                     st.error("Please enter a valid numeric user ID.")
+
+        elif admin_action == "View Cancelled Bookings":
+            cancelled = BookingService.get_cancelled_bookings()
+            if cancelled:
+                for b in cancelled:
+                    st.write(f"🧾 Booking ID: {b['booking_id']}")
+                    st.write(f"👤 User: {b['name']} ({b['email']})")
+                    st.write(f"🎬 Movie: {b['movie_title']}")
+                    st.write(f"⏰ Showtime: {b['showtime']}")
+                    st.write(f"❌ Cancelled at: {b['cancelled_at']}")
+                    st.markdown("---")
+            else:
+                st.info("No cancelled bookings yet.")
+
+            st.markdown("### 🧹 Clear Cancelled Bookings")
+
+            if st.button("Delete All Cancelled Bookings"):
+                BookingService.delete_cancelled_bookings()
+                st.success("All cancelled bookings have been deleted.")
+

@@ -22,3 +22,10 @@ class ShowtimeService:
     def update_showtime(movie_id, old_showtime_obj, new_time_str):
         query = "UPDATE showtimes SET time = %s WHERE movie_id = %s AND time = %s;"
         run_query(query, (new_time_str, movie_id, old_showtime_obj.time))
+
+    @staticmethod
+    def get_showtime_id(movie_id, time):
+        query = "SELECT id FROM showtime WHERE movie_id = %s AND time = %s;"
+        result = run_query(query, (movie_id, time), fetch=True)
+        return result[0]["id"] if result else None
+

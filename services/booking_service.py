@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from data.db import run_query
 
 class BookingService:
@@ -15,17 +17,18 @@ class BookingService:
     @staticmethod
     def get_user_bookings(user_id):
         query = """
-            SELECT 
-                b.id AS booking_id,
-                u.name AS user_name,
-                m.title AS movie_title,
-                s.time AS showtime
-            FROM bookings b
-            JOIN users u ON b.user_id = u.id
-            JOIN showtimes s ON b.showtime_id = s.id
-            JOIN movies m ON s.movie_id = m.id
-            WHERE b.user_id = %s
-            ORDER BY b.id DESC;
+        SELECT 
+            b.id AS booking_id,
+            u.name AS user_name,
+            m.title AS movie_title,
+            s.time AS showtime,
+            b.total_price
+        FROM bookings b
+        JOIN users u ON b.user_id = u.id
+        JOIN showtimes s ON b.showtime_id = s.id
+        JOIN movies m ON s.movie_id = m.id
+        WHERE b.user_id = %s AND b.is_cancelled = FALSE
+        ORDER BY b.id DESC;
         """
         results = run_query(query, (user_id,), fetch=True)
 
@@ -37,9 +40,10 @@ class BookingService:
 
             bookings.append({
                 "booking_id": row["booking_id"],
-                "user_name": row["user_name"],  # ✅ added
+                "user_name": row["user_name"],
                 "movie_title": row["movie_title"],
                 "showtime": row["showtime"],
+                "total_price": row["total_price"],
                 "seats": seat_list
             })
         return bookings
@@ -56,11 +60,24 @@ class BookingService:
         result = run_query(query, (movie_id, showtime_str), fetch=True)
         return [row["seat_label"] for row in result]
 
+    # @staticmethod
+    # def cancel_booking(booking_id):
+    #     # Delete booking seats first due to foreign key constraints
+    #     run_query("DELETE FROM booking_seats WHERE booking_id = %s;", (booking_id,))
+    #     run_query("DELETE FROM bookings WHERE id = %s;", (booking_id,))
+
+
     @staticmethod
     def cancel_booking(booking_id):
-        # Delete booking seats first due to foreign key constraints
+        # Mark the booking as cancelled instead of deleting
+        cancel_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        run_query(
+            "UPDATE bookings SET is_cancelled = TRUE, cancelled_at = %s WHERE id = %s;",
+            (cancel_time, booking_id)
+        )
+
+        # Free the booked seats
         run_query("DELETE FROM booking_seats WHERE booking_id = %s;", (booking_id,))
-        run_query("DELETE FROM bookings WHERE id = %s;", (booking_id,))
 
     @staticmethod
     def get_all_bookings():
@@ -100,9 +117,9 @@ class BookingService:
         query = """
             SELECT b.id AS booking_id, u.name, m.title AS movie_title, s.time AS showtime
             FROM bookings b
-            JOIN users u ON b.user_id = u.id
-            JOIN showtimes s ON b.showtime_id = s.id
-            JOIN movies m ON s.movie_id = m.id
+            LEFT JOIN users u ON b.user_id = u.id
+            LEFT JOIN showtimes s ON b.showtime_id = s.id
+            LEFT JOIN movies m ON s.movie_id = m.id
             WHERE b.id = %s;
         """
         result = run_query(query, (booking_id,), fetch=True)
@@ -152,3 +169,49 @@ class BookingService:
             """
         result = run_query(query, (showtime_id,), fetch=True)
         return [row["seat_label"] for row in result]
+
+    @staticmethod
+    def get_cancelled_bookings():
+        query = """
+        SELECT 
+            b.id AS booking_id,
+            u.name,
+            u.email,
+            m.title AS movie_title,
+            s.time AS showtime,
+            b.total_price,
+            b.cancelled_at
+        FROM bookings b
+        JOIN users u ON b.user_id = u.id
+        JOIN showtimes s ON b.showtime_id = s.id
+        JOIN movies m ON s.movie_id = m.id
+        WHERE b.is_cancelled = TRUE
+        ORDER BY b.cancelled_at DESC;
+        """
+        results = run_query(query, fetch=True)
+
+        bookings = []
+        for row in results:
+            # Get the seat labels for this cancelled booking
+            seats_query = "SELECT seat_label FROM booking_seats WHERE booking_id = %s;"
+            seat_rows = run_query(seats_query, (row["booking_id"],), fetch=True)
+            seat_list = [seat["seat_label"] for seat in seat_rows]
+
+            # Add 'seats' key into the booking dict
+            row["seats"] = seat_list
+            bookings.append(row)
+
+        return bookings
+
+    @staticmethod
+    def delete_cancelled_bookings():
+        # Delete booking seats for cancelled bookings
+        run_query("""
+            DELETE FROM booking_seats 
+            WHERE booking_id IN (SELECT id FROM bookings WHERE is_cancelled = TRUE);
+        """)
+
+        # Delete cancelled bookings
+        run_query("DELETE FROM bookings WHERE is_cancelled = TRUE;")
+
+

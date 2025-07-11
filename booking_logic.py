@@ -1,12 +1,11 @@
 # booking_logic.py
-from data.showtime import get_showtime_id
 from services.booking_service import BookingService
 from services.showtime_service import ShowtimeService
 
 
 def confirm_booking(user_id, movie_id, showtime, seat_list):
     # Get showtime id for the movie and showtime string
-    showtime_id = get_showtime_id(movie_id, showtime)
+    showtime_id = ShowtimeService.get_showtime_id(movie_id, showtime)
     if showtime_id is None:
         raise ValueError("Showtime not found")
 

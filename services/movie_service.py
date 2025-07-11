@@ -33,7 +33,7 @@ class MovieService:
         return None
 
     @staticmethod
-    def add_movie(title, description, showtimes, poster_url=None, trailer_url=None, price_per_seat=200):
+    def add_movie(title, description, poster_url=None, trailer_url=None, price_per_seat=200):
         query = """
             INSERT INTO movies (title, description, poster_url, trailer_url, price_per_seat)
             VALUES (%s, %s, %s, %s, %s) RETURNING id;
