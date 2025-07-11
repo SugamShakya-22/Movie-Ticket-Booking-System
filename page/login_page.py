@@ -17,7 +17,7 @@ class LoginPage:
             retype = st.sidebar.text_input("Retype Password", type="password")
 
             if st.sidebar.button("Register"):
-                if not (name and email and password and retype):
+                if not (name or email or password or retype):
                     st.sidebar.warning("Please fill all fields.")
                 elif password != retype:
                     st.sidebar.error("Passwords do not match.")
