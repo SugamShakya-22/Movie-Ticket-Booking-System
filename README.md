@@ -127,6 +127,25 @@ Email: admin@hotmail.com
 
 Password: (Set this at registration time)
 
+# System Interfaces
+1. Register
+   ![register](https://github.com/user-attachments/assets/efc4a0b2-5cff-40a2-8ec0-ab2550af7b28)
+
+2. Login
+![login](https://github.com/user-attachments/assets/5dedf53f-8c66-4353-83c3-5a74b97d3aca)
+
+3. Browse Movies
+   ![Browse Movie](https://github.com/user-attachments/assets/d5c899e9-a326-44e9-a9b5-4785f2e5d6bb)
+   
+4. Book Tickets
+   ![Book Tickets](https://github.com/user-attachments/assets/f73c4228-5c11-4fdc-98db-d37fbf7dd87c)
+
+5. Cancel Bookings
+<img width="1912" height="897" alt="image" src="https://github.com/user-attachments/assets/a6ae6582-9ad9-4c99-bd37-4b0f65ca4254" />
+
+6. Admin Panel
+   <img width="1920" height="935" alt="image" src="https://github.com/user-attachments/assets/194ab890-acb4-4619-bf68-db64553cef22" />
+
 # License
 This project is for educational purposes and is not licensed for commercial use.
 
