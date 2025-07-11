@@ -86,6 +86,9 @@ CREATE TABLE bookings (
     showtime_id INTEGER NOT NULL REFERENCES showtimes(id) ON DELETE CASCADE,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_cancelled BOOLEAN DEFAULT FALSE,
+    cancelled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    total_price INTEGER DEFAULT 0,
 );
 
 -- Booking seats table
