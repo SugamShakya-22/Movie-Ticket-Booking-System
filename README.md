@@ -32,11 +32,6 @@ It is a simple movie ticket booking system built using Python and [Streamlit](ht
 Install the dependencies using pip:
 
 ```bash
-pip install -r requirements.txt
-```
-Or manually install:
-
-```bash
 pip install streamlit psycopg2 passlib
 ```
 
