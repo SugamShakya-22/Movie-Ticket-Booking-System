@@ -145,4 +145,4 @@ Password: (Set this at registration time)
 This project is for educational purposes and is not licensed for commercial use.
 
 # Developed By
-Sugam Shakya – Python Backend Intern at Verisk Nepal
+Sugam Shakya – Java Backend Intern at Verisk Nepal
